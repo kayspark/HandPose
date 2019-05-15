@@ -1,9 +1,9 @@
-import cv2
 import os
-from os.path import isfile, join
+
+import cv2
 import numpy as np
-from random import randint
 from sklearn.utils import shuffle
+
 
 def read_data(req_poses):
     count_im = 0

@@ -5,17 +5,18 @@ import tensorflow as tf
 import os; os.environ['KERAS_BACKEND'] = 'tensorflow'
 import keras
 
-def load_KerasGraph(path): 
+def load_KerasGraph(path):
     print("> ====== loading Keras model for classification")
     thread_graph = Graph()
     with thread_graph.as_default():
         thread_session = Session()
         with thread_session.as_default():
             model = keras.models.load_model(path)
-            #model._make_predict_function()
+            # model._make_predict_function()
             graph = tf.get_default_graph()
     print(">  ====== Keras model loaded")
     return model, graph, thread_session
+
 
 def classify(model, graph, sess, im):
     im = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
@@ -23,7 +24,7 @@ def classify(model, graph, sess, im):
     im = cv2.flip(im, 1)
 
     # Reshape
-    res = cv2.resize(im, (28,28), interpolation=cv2.INTER_AREA)
+    res = cv2.resize(im, (28, 28), interpolation=cv2.INTER_AREA)
 
     # Convert to float values between 0. and 1.
     res = res.astype(dtype="float64")
@@ -32,9 +33,10 @@ def classify(model, graph, sess, im):
 
     with graph.as_default():
         with sess.as_default():
-            prediction= model.predict(res)
+            prediction = model.predict(res)
 
-    return prediction[0] 
+    return prediction[0]
+
 
 def test_classify(model, im):
     im = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
@@ -42,16 +44,17 @@ def test_classify(model, im):
     im = cv2.flip(im, 1)
 
     # Reshape
-    res = cv2.resize(im, (28,28), interpolation=cv2.INTER_AREA)
+    res = cv2.resize(im, (28, 28), interpolation=cv2.INTER_AREA)
 
     # Convert to float values between 0. and 1.
     res = res.astype(dtype="float64")
     res = res / 255
     res = np.reshape(res, (1, 28, 28, 1))
 
-    prediction= model.predict(res)
+    prediction = model.predict(res)
 
     return prediction[0]
+
 
 if __name__ == "__main__":
     import keras
@@ -76,7 +79,7 @@ if __name__ == "__main__":
     print('<< FOUR >>')
     im = cv2.imread("Poses/Four/Four_1/Four_1_867.png")
     print(test_classify(model, im))
-    
+
     # Startrek
     print('<< Startrek >>')
     im = cv2.imread("Poses/Startrek/Startrek_1/Startrek_1_867.png")

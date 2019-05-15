@@ -1,17 +1,12 @@
-import scipy.io as sio
-import numpy as np
+import csv
 import os
-import gc
-import six.moves.urllib as urllib
-import cv2
-import time
-import xml.etree.cElementTree as ET
 import random
-import shutil as sh
-from shutil import copyfile
 import zipfile
 
-import csv
+import cv2
+import numpy as np
+import scipy.io as sio
+import six.moves.urllib as urllib
 
 
 def save_csv(csv_path, csv_content):
@@ -25,11 +20,11 @@ def get_bbox_visualize(base_path, _dir):
     image_path_array = []
     for root, dirs, filenames in os.walk(base_path + _dir):
         for f in filenames:
-            if(f.split(".")[1] == "jpg"):
+            if (f.split(".")[1] == "jpg"):
                 img_path = base_path + _dir + "/" + f
                 image_path_array.append(img_path)
 
-    #sort image_path_array to ensure its in the low to high order expected in polygon.mat
+    # sort image_path_array to ensure its in the low to high order expected in polygon.mat
     image_path_array.sort()
     boxes = sio.loadmat(
         base_path + _dir + "/polygons.mat")
@@ -64,11 +59,11 @@ def get_bbox_visualize(base_path, _dir):
 
             findex = 0
             for point in pointlist:
-                if(len(point) == 2):
+                if (len(point) == 2):
                     x = int(point[0])
                     y = int(point[1])
 
-                    if(findex == 0):
+                    if (findex == 0):
                         min_x = x
                         min_y = y
                     findex += 1
@@ -111,6 +106,7 @@ def create_directory(dir_path):
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
+
 # combine all individual csv files for each image into a single csv file per folder.
 
 
@@ -123,9 +119,9 @@ def generate_label_files(image_dir):
             csvholder.append(header)
             loop_index = 0
             for f in os.listdir(image_dir + _dir):
-                if(f.split(".")[1] == "csv"):
+                if (f.split(".")[1] == "csv"):
                     loop_index += 1
-                    #print(loop_index, f)
+                    # print(loop_index, f)
                     csv_file = open(image_dir + _dir + "/" + f, 'r')
                     reader = csv.reader(csv_file)
                     for row in reader:
@@ -151,7 +147,7 @@ def split_data_test_eval_train(image_dir):
     for root, dirs, filenames in os.walk(image_dir):
         for _dir in dirs:
             for f in os.listdir(image_dir + _dir):
-                if(f.split(".")[1] == "jpg"):
+                if (f.split(".")[1] == "jpg"):
                     loop_index += 1
                     print(loop_index, f)
 
@@ -191,7 +187,7 @@ def rename_files(image_dir):
         for _dir in dirs:
             for f in os.listdir(image_dir + _dir):
                 if (_dir not in f):
-                    if(f.split(".")[1] == "jpg"):
+                    if (f.split(".")[1] == "jpg"):
                         loop_index += 1
                         os.rename(image_dir + _dir +
                                   "/" + f, image_dir + _dir +
@@ -200,6 +196,7 @@ def rename_files(image_dir):
                     break
 
     generate_csv_files("egohands/_LABELLED_SAMPLES/")
+
 
 def extract_folder(dataset_path):
     print("Egohands dataset already downloaded.\nGenerating CSV files")
@@ -210,6 +207,7 @@ def extract_folder(dataset_path):
         print("> Extraction complete")
         zip_ref.close()
         rename_files("egohands/_LABELLED_SAMPLES/")
+
 
 def download_egohands_dataset(dataset_url, dataset_path):
     is_downloaded = os.path.exists(dataset_path)
@@ -227,6 +225,5 @@ def download_egohands_dataset(dataset_url, dataset_path):
 
 EGOHANDS_DATASET_URL = "http://vision.soic.indiana.edu/egohands_files/egohands_data.zip"
 EGO_HANDS_FILE = "egohands_data.zip"
-
 
 download_egohands_dataset(EGOHANDS_DATASET_URL, EGO_HANDS_FILE)

@@ -1,14 +1,13 @@
 # Utilities for object detector.
-import numpy as np
-import sys
-import tensorflow as tf
 import os
+import sys
 from threading import Thread
-from datetime import datetime
-import cv2
-from utils import label_map_util
-from collections import defaultdict
 
+import cv2
+import numpy as np
+import tensorflow as tf
+
+from utils import label_map_util
 
 detection_graph = tf.Graph()
 sys.path.append("..")
@@ -34,9 +33,9 @@ category_index = label_map_util.create_category_index(categories)
 def load_inference_graph():
     # load frozen tensorflow model into memory
     print("> ====== loading HAND frozen graph into memory")
-    detection_graph = tf.Graph()
+    detection_graph = tf.compat.v1.Graph()
     with detection_graph.as_default():
-        od_graph_def = tf.GraphDef()
+        od_graph_def = tf.compat.v1.GraphDef()
         with tf.gfile.GFile(PATH_TO_CKPT, 'rb') as fid:
             serialized_graph = fid.read()
             od_graph_def.ParseFromString(serialized_graph)
@@ -56,6 +55,7 @@ def draw_box_on_image(num_hands_detect, score_thresh, scores, boxes, im_width, i
             p1 = (int(left), int(top))
             p2 = (int(right), int(bottom))
             cv2.rectangle(image_np, p1, p2, (77, 255, 9), 3, 1)
+
 
 def get_box_image(num_hands_detect, score_thresh, scores, boxes, im_width, im_height, image_np):
     for i in range(num_hands_detect):
@@ -93,7 +93,7 @@ def detect_objects(image_np, detection_graph, sess):
 
     (boxes, scores, classes, num) = sess.run(
         [detection_boxes, detection_scores,
-            detection_classes, num_detections],
+         detection_classes, num_detections],
         feed_dict={image_tensor: image_np_expanded})
     return np.squeeze(boxes), np.squeeze(scores)
 

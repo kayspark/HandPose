@@ -1,8 +1,10 @@
-import numpy as np
-import cv2
 import os
-from utils import detector_utils as detector_utils
+
+import cv2
 import tensorflow as tf
+
+from utils import detector_utils as detector_utils
+
 
 def main():
     currentPath = ''
@@ -13,11 +15,11 @@ def main():
                             \n 3 - Add garbage examples')
 
     menu_choice = input()
-    while(menu_choice != '1' and menu_choice != '2' and menu_choice != '3'):
+    while (menu_choice != '1' and menu_choice != '2' and menu_choice != '3'):
         print('Please enter 1 or 2')
         menu_choice = input()
 
-    if(menu_choice == '1'):
+    if (menu_choice == '1'):
         print('Enter a name for the pose you want to add :')
         name_pose = input()
 
@@ -27,7 +29,7 @@ def main():
             currentPath = 'Poses/' + name_pose + '/' + name_pose + '_1/'
             currentExample = name_pose + '_1_'
 
-    elif(menu_choice == '2'):
+    elif (menu_choice == '2'):
         # Display current poses
         dirs = os.listdir('Poses/')
         dirs_choice = ''
@@ -36,30 +38,30 @@ def main():
         for _dir in dirs:
             dirs_choice += str(i) + ' - ' + str(_dir) + ' / '
             possible_choices.append(str(i))
-            i+=1
-        
+            i += 1
+
         # Ask user to choose to which pose to add examples
         print('Choose one of the following pose:')
-        print(dirs_choice)       
+        print(dirs_choice)
         choice = input()
-        while(not choice in possible_choices and dirs[int(choice)-1]=='garbage'):
+        while (not choice in possible_choices and dirs[int(choice) - 1] == 'garbage'):
             print('Please enter one of the following (not garbage): ' + str(possible_choices))
             choice = input()
 
         # Count number of files to increment new example directory
-        subdirs = os.listdir('Poses/' + dirs[int(choice)-1] + '/')
+        subdirs = os.listdir('Poses/' + dirs[int(choice) - 1] + '/')
         index = len(subdirs) + 1
 
         # Create new example directory
-        if not os.path.exists('Poses/' + dirs[int(choice)-1] + '/' + dirs[int(choice)-1] + '_' + str(index) + '/'):
-            os.makedirs('Poses/' + dirs[int(choice)-1] + '/' + dirs[int(choice)-1] + '_' + str(index) + '/')
+        if not os.path.exists('Poses/' + dirs[int(choice) - 1] + '/' + dirs[int(choice) - 1] + '_' + str(index) + '/'):
+            os.makedirs('Poses/' + dirs[int(choice) - 1] + '/' + dirs[int(choice) - 1] + '_' + str(index) + '/')
 
-            #Update current path
-            currentPath = 'Poses/' + dirs[int(choice)-1] + '/' + dirs[int(choice)-1] + '_' + str(index) + '/'
-            currentExample = dirs[int(choice)-1] + '_' + str(index) + '_'
+            # Update current path
+            currentPath = 'Poses/' + dirs[int(choice) - 1] + '/' + dirs[int(choice) - 1] + '_' + str(index) + '/'
+            currentExample = dirs[int(choice) - 1] + '_' + str(index) + '_'
             name_pose = dirs[int(choice) - 1]
-    
-    elif(menu_choice == '3'):
+
+    elif (menu_choice == '3'):
         # Create folder for pose 
         if not os.path.exists('Poses/Garbage/'):
             os.makedirs('Poses/Garbage/Garbage_1/')
@@ -74,11 +76,10 @@ def main():
             if not os.path.exists('Poses/Garbage/Garbage_' + str(index) + '/'):
                 os.makedirs('Poses/Garbage/Garbage_' + str(index) + '/')
 
-                #Update current path
+                # Update current path
                 currentPath = 'Poses/Garbage/Garbage_' + str(index) + '/'
-                currentExample ='Garbage_' + str(index) + '_'
+                currentExample = 'Garbage_' + str(index) + '_'
                 name_pose = 'Garbage'
-        
 
     print('You\'ll now be prompted to record the pose you want to add. \n \
                 Please place your hand beforehand facing the camera, and press any key when ready. \n \
@@ -92,7 +93,7 @@ def main():
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out = cv2.VideoWriter(currentPath + name_pose + '.avi', fourcc, 25.0, (640, 480))
 
-    while(cap.isOpened()):
+    while (cap.isOpened()):
         ret, frame = cap.read()
         if ret:
             # write the frame
@@ -120,10 +121,10 @@ def main():
     detection_graph, sess = detector_utils.load_inference_graph()
     sess = tf.Session(graph=detection_graph)
     print('>> model loaded!')
-    
+
     _iter = 1
     # Read until video is completed
-    while(vid.isOpened()):
+    while (vid.isOpened()):
         # Capture frame-by-frame
         ret, frame = vid.read()
         if ret:
@@ -140,7 +141,7 @@ def main():
             res = detector_utils.get_box_image(1, 0.2, scores, boxes, 320, 180, frame)
 
             # Save cropped image 
-            if(res is not None):       
+            if (res is not None):
                 cv2.imwrite(currentPath + currentExample + str(_iter) + '.png', cv2.cvtColor(res, cv2.COLOR_RGB2BGR))
 
             _iter += 1

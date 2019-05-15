@@ -1,20 +1,22 @@
-from utils import detector_utils as detector_utils
-from utils import pose_classification_utils as classifier
+import argparse
+import datetime
+import os
+from multiprocessing import Queue, Pool
+
 import cv2
 import tensorflow as tf
-import multiprocessing
-from multiprocessing import Queue, Pool
-import time
+
+from utils import detector_utils as detector_utils
+from utils import pose_classification_utils as classifier
 from utils.detector_utils import WebcamVideoStream
-import datetime
-import argparse
-import os; 
-os.environ['KERAS_BACKEND'] = 'tensorflow'
+
 import keras
 import gui
+os.environ['KERAS_BACKEND'] = 'tensorflow'
 
 frame_processed = 0
 score_thresh = 0.18
+
 
 # Create a worker thread that loads graph and
 # does detection on images in an input queue and puts it on an output queue
@@ -32,7 +34,7 @@ def worker(input_q, output_q, cropped_output_q, inferences_q, cap_params, frame_
         print(e)
 
     while True:
-        #print("> ===== in worker loop, frame ", frame_processed)
+        # print("> ===== in worker loop, frame ", frame_processed)
         frame = input_q.get()
         if (frame is not None):
             # Actual detection. Variable boxes contains the bounding box cordinates for hands detected,
@@ -43,18 +45,18 @@ def worker(input_q, output_q, cropped_output_q, inferences_q, cap_params, frame_
 
             # get region of interest
             res = detector_utils.get_box_image(cap_params['num_hands_detect'], cap_params["score_thresh"],
-                scores, boxes, cap_params['im_width'], cap_params['im_height'], frame)
-            
+                                               scores, boxes, cap_params['im_width'], cap_params['im_height'], frame)
+
             # draw bounding boxes
             detector_utils.draw_box_on_image(cap_params['num_hands_detect'], cap_params["score_thresh"],
-                scores, boxes, cap_params['im_width'], cap_params['im_height'], frame)
-            
+                                             scores, boxes, cap_params['im_width'], cap_params['im_height'], frame)
+
             # classify hand pose
             if res is not None:
                 class_res = classifier.classify(model, classification_graph, session, res)
-                inferences_q.put(class_res)       
-            
-            # add frame annotated with bounding box to queue
+                inferences_q.put(class_res)
+
+                # add frame annotated with bounding box to queue
             cropped_output_q.put(res)
             output_q.put(frame)
             frame_processed += 1
@@ -124,10 +126,10 @@ if __name__ == '__main__':
         help='Size of the queue.')
     args = parser.parse_args()
 
-    input_q             = Queue(maxsize=args.queue_size)
-    output_q            = Queue(maxsize=args.queue_size)
-    cropped_output_q    = Queue(maxsize=args.queue_size)
-    inferences_q        = Queue(maxsize=args.queue_size)
+    input_q = Queue(maxsize=args.queue_size)
+    output_q = Queue(maxsize=args.queue_size)
+    cropped_output_q = Queue(maxsize=args.queue_size)
+    inferences_q = Queue(maxsize=args.queue_size)
 
     video_capture = WebcamVideoStream(
         src=args.video_source, width=args.width, height=args.height).start()
@@ -142,17 +144,16 @@ if __name__ == '__main__':
     cap_params['num_hands_detect'] = args.num_hands
 
     print(cap_params, args)
-    
+
     # Count number of files to increment new example directory
     poses = []
-    _file = open("poses.txt", "r") 
+    _file = open("poses.txt", "r")
     lines = _file.readlines()
     for line in lines:
         line = line.strip()
-        if(line != ""):
+        if (line != ""):
             print(line)
             poses.append(line)
-
 
     # spin up workers to paralleize detection.
     pool = Pool(args.num_workers, worker,
@@ -175,42 +176,41 @@ if __name__ == '__main__':
         output_frame = output_q.get()
         cropped_output = cropped_output_q.get()
 
-        inferences      = None
+        inferences = None
 
         try:
             inferences = inferences_q.get_nowait()
         except Exception as e:
-            pass      
+            pass
 
         elapsed_time = (datetime.datetime.now() - start_time).total_seconds()
         num_frames += 1
         fps = num_frames / elapsed_time
 
         # Display inferences
-        if(inferences is not None):
+        if inferences is not None:
             gui.drawInferences(inferences, poses)
 
-        if (cropped_output is not None):
-            cropped_output = cv2.cvtColor(cropped_output, cv2.COLOR_RGB2BGR)
-            if (args.display > 0):
-                cv2.namedWindow('Cropped', cv2.WINDOW_NORMAL)
-                cv2.resizeWindow('Cropped', 450, 300)
-                cv2.imshow('Cropped', cropped_output)
-                #cv2.imwrite('image_' + str(num_frames) + '.png', cropped_output)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-            else:
-                if (num_frames == 400):
-                    num_frames = 0
-                    start_time = datetime.datetime.now()
-                else:
-                    print("frames processed: ", index, "elapsed time: ",
-                          elapsed_time, "fps: ", str(int(fps)))
+        # if (cropped_output is not None):
+        #     cropped_output = cv2.cvtColor(cropped_output, cv2.COLOR_RGB2BGR)
+        #     if (args.display > 0):
+        #         cv2.namedWindow('Cropped', cv2.WINDOW_NORMAL)
+        #         cv2.resizeWindow('Cropped', 450, 300)
+        #         cv2.imshow('Cropped', cropped_output)
+        #         # cv2.imwrite('image_' + str(num_frames) + '.png', cropped_output)
+        #         if cv2.waitKey(1) & 0xFF == ord('q'):
+        #             break
+        #     else:
+        #         if (num_frames == 400):
+        #             num_frames = 0
+        #             start_time = datetime.datetime.now()
+        #         else:
+        #             print("frames processed: ", index, "elapsed time: ",
+        #                   elapsed_time, "fps: ", str(int(fps)))
 
-    
         # print("frame ",  index, num_frames, elapsed_time, fps)
 
-        if (output_frame is not None):
+        if output_frame is not None:
             output_frame = cv2.cvtColor(output_frame, cv2.COLOR_RGB2BGR)
             if (args.display > 0):
                 if (args.fps > 0):

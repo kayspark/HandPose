@@ -1,15 +1,16 @@
-from utils import detector_utils as detector_utils
+import argparse
+import datetime
+from multiprocessing import Queue, Pool
+
 import cv2
 import tensorflow as tf
-import multiprocessing
-from multiprocessing import Queue, Pool
-import time
+
+from utils import detector_utils as detector_utils
 from utils.detector_utils import WebcamVideoStream
-import datetime
-import argparse
 
 frame_processed = 0
 score_thresh = 0.24
+
 
 # Create a worker thread that loads graph and
 # does detection on images in an input queue and puts it on an output queue
@@ -18,7 +19,7 @@ def worker(input_q, output_q, cap_params, frame_processed):
     detection_graph, sess = detector_utils.load_inference_graph()
     sess = tf.Session(graph=detection_graph)
     while True:
-        #print("> ===== in worker loop, frame ", frame_processed)
+        # print("> ===== in worker loop, frame ", frame_processed)
         frame = input_q.get()
         if (frame is not None):
             # Actual detection. Variable boxes contains the bounding box cordinates for hands detected,
